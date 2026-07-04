@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auto EDA – Intelligent Data Analysis</title>
+    <meta name="description" content="Production-grade automatic exploratory data analysis dashboard." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3Cpath d='M20 70 L40 50 L55 60 L80 30' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">∑</div>
+            <div>
+                <div class="brand-name">Auto EDA</div>
+                <div class="brand-sub">Data Analysis</div>
+            </div>
+        </div>
+
+        <nav class="nav" id="mainNav">
+            <button class="nav-item active" data-section="upload">
+                <span class="step-num">1</span> Upload Dataset
+            </button>
+            <button class="nav-item" data-section="overview" disabled>
+                <span class="step-num">2</span> Overview
+            </button>
+            <button class="nav-item" data-section="univariate" disabled>
+                <span class="step-num">3</span> Univariate
+            </button>
+            <button class="nav-item" data-section="bivariate" disabled>
+                <span class="step-num">4</span> Bivariate
+            </button>
+            <button class="nav-item" data-section="missing" disabled>
+                <span class="step-num">5</span> Missing Values
+            </button>
+            <button class="nav-item" data-section="outliers" disabled>
+                <span class="step-num">6</span> Outliers
+            </button>
+            <button class="nav-item" data-section="normalize" disabled>
+                <span class="step-num">7</span> Normalization
+            </button>
+            <button class="nav-item" data-section="download" disabled>
+                <span class="step-num">8</span> Download
+            </button>
+        </nav>
+
+        <div class="dataset-card" id="datasetCard" style="display:none;">
+            <h4>Current Dataset</h4>
+            <div class="file-name" id="fileName">—</div>
+            <div style="font-size:12px; color:var(--text-light); margin-top:6px;" id="fileMeta"></div>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <!-- ============== UPLOAD ============== -->
+        <section class="section active" id="section-upload">
+            <div class="page-header">
+                <h1>Upload your dataset</h1>
+                <p>Start by uploading a CSV file. We'll automatically detect column types and prepare it for analysis.</p>
+            </div>
+
+            <div class="card">
+                <div class="drop-zone" id="dropZone">
+                    <div class="icon">⬆</div>
+                    <h3>Drop your CSV file here</h3>
+                    <p>or click to browse files</p>
+                    <input type="file" id="fileInput" accept=".csv" />
+                </div>
+            </div>
+
+            <div class="card" id="uploadStatus" style="display:none;">
+                <div class="card-title">Upload Status <span class="badge" id="uploadBadge">processing</span></div>
+                <p id="uploadMessage">Reading your file…</p>
+            </div>
+        </section>
+
+        <!-- ============== OVERVIEW ============== -->
+        <section class="section" id="section-overview">
+            <div class="page-header">
+                <h1>Dataset Overview</h1>
+                <p>High-level summary of your data, types and key statistics.</p>
+            </div>
+
+            <div class="kpi-grid" id="kpiGrid"></div>
+
+            <div class="card">
+                <div class="card-title">Column Summary <span class="badge" id="colCount">0 cols</span></div>
+                <div class="table-wrap">
+                    <table id="colTable">
+                        <thead>
+                            <tr>
+                                <th>Column</th><th>Type</th><th>Missing</th><th>Unique</th>
+                                <th>Mean</th><th>Std</th><th>Min</th><th>Median</th><th>Max</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Sample Preview</div>
+                <div class="table-wrap">
+                    <table id="previewTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== UNIVARIATE ============== -->
+        <section class="section" id="section-univariate">
+            <div class="page-header">
+                <h1>Univariate Analysis</h1>
+                <p>Distribution and frequency of each column individually.</p>
+            </div>
+            <div id="univariateContent" class="chart-grid"></div>
+        </section>
+
+        <!-- ============== BIVARIATE ============== -->
+        <section class="section" id="section-bivariate">
+            <div class="page-header">
+                <h1>Bivariate Analysis</h1>
+                <p>Explore relationships between two variables.</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" data-bvtab="num-num">Numeric × Numeric</button>
+                <button class="tab" data-bvtab="cat-cat">Categorical × Categorical</button>
+                <button class="tab" data-bvtab="pivot">Pivot Table</button>
+            </div>
+
+            <div class="card bvtab-panel" data-panel="num-num">
+                <div class="form-row">
+                    <div class="field">
+                        <label>X column (numeric)</label>
+                        <select id="nn_x"></select>
+                    </div>
+                    <div class="field">
+                        <label>Y column (numeric)</label>
+                        <select id="nn_y"></select>
+                    </div>
+                    <div class="field">
+                        <label>Plot type</label>
+                        <select id="nn_kind">
+                            <option value="scatter">Scatter</option>
+                            <option value="line">Line</option>
+                            <option value="hexbin">Hexbin</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="nn_go">Generate plot</button>
+                <div id="nn_output" style="margin-top:20px;"></div>
+            </div>
+
+            <div class="card bvtab-panel" data-panel="cat-cat" style="display:none;">
+                <div class="form-row">
+                    <div class="field">
+                        <label>Index (rows)</label>
+                        <select id="cc_i"></select>
+                    </div>
+                    <div class="field">
+                        <label>Columns</label>
+                        <select id="cc_c"></select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="cc_go">Generate crosstab</button>
+                <div id="cc_output" style="margin-top:20px;"></div>
+            </div>
+
+            <div class="card bvtab-panel" data-panel="pivot" style="display:none;">
+                <div class="form-row">
+                    <div class="field">
+                        <label>Index (rows)</label>
+                        <select id="pv_i" multiple size="4"></select>
+                    </div>
+                    <div class="field">
+                        <label>Columns</label>
+                        <select id="pv_c" multiple size="4"></select>
+                    </div>
+                    <div class="field">
+                        <label>Values</label>
+                        <select id="pv_v" multiple size="4"></select>
+                    </div>
+                    <div class="field">
+                        <label>Aggregation</label>
+                        <select id="pv_agg">
+                            <option value="sum">Sum</option>
+                            <option value="mean">Mean</option>
+                            <option value="count">Count</option>
+                            <option value="min">Min</option>
+                            <option value="max">Max</option>
+                            <option value="median">Median</option>
+                            <option value="std">Std Dev</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="pv_go">Generate pivot</button>
+                <div id="pv_output" style="margin-top:20px;"></div>
+            </div>
+        </section>
+
+        <!-- ============== MISSING ============== -->
+        <section class="section" id="section-missing">
+            <div class="page-header">
+                <h1>Handle Missing Values</h1>
+                <p>Choose a strategy for every column that has missing data.</p>
+            </div>
+            <div class="card">
+                <div id="missingContent"></div>
+                <button class="btn btn-primary" id="applyMissing">Apply Imputation</button>
+            </div>
+            <div class="card" id="missingLog" style="display:none;">
+                <div class="card-title">Imputation Log</div>
+                <div class="table-wrap"><table id="missingTable"><thead></thead><tbody></tbody></table></div>
+            </div>
+        </section>
+
+        <!-- ============== OUTLIERS ============== -->
+        <section class="section" id="section-outliers">
+            <div class="page-header">
+                <h1>Outlier Removal (IQR)</h1>
+                <p>Remove rows that fall outside 1.5× the IQR for any numeric column.</p>
+            </div>
+            <div class="card">
+                <p style="margin-bottom:14px; color:var(--text-light);">
+                    This will apply the IQR method to <b>all numeric columns</b> by default.
+                    The result is a comparison table showing how descriptive statistics changed.
+                </p>
+                <button class="btn btn-primary" id="applyIQR">Apply IQR Outlier Removal</button>
+            </div>
+            <div class="card" id="iqrSummary" style="display:none;">
+                <div class="card-title">Outlier Summary</div>
+                <div id="iqrContent"></div>
+            </div>
+        </section>
+
+        <!-- ============== NORMALIZE ============== -->
+        <section class="section" id="section-normalize">
+            <div class="page-header">
+                <h1>Feature Normalization</h1>
+                <p>Scale numeric columns using MinMax or Standard scaler.</p>
+            </div>
+            <div class="card">
+                <div id="normalizeContent"></div>
+                <button class="btn btn-primary" id="applyNormalize">Apply Normalization</button>
+            </div>
+            <div class="card" id="normalizeLog" style="display:none;">
+                <div class="card-title">Normalization Results</div>
+                <div id="normalizeContent_out"></div>
+            </div>
+        </section>
+
+        <!-- ============== DOWNLOAD ============== -->
+        <section class="section" id="section-download">
+            <div class="page-header">
+                <h1>Download Cleaned Data</h1>
+                <p>Your transformations have been applied. Download the final dataset as CSV.</p>
+            </div>
+            <div class="card" style="text-align:center; padding:40px;">
+                <div class="empty">
+                    <div class="icon">⬇</div>
+                    <h3 style="color:var(--text); margin-bottom:6px;">Ready to download</h3>
+                    <p style="margin-bottom:20px;">The file will contain every transformation you applied.</p>
+                    <a class="btn btn-success" id="downloadBtn" href="#">Download cleaned CSV</a>
+                </div>
+            </div>
+        </section>
+
+        <div class="footer">
+            Auto EDA · Production-grade automatic data analysis · Built with FastAPI + ❤️
+        </div>
+    </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="overlay" id="overlay" style="display:none;">
+    <div class="panel">
+        <span class="spinner dark"></span>
+        <span id="overlayText">Loading…</span>
+    </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
+
+
+
